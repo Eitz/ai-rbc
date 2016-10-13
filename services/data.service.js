@@ -1,161 +1,167 @@
 angular.module('RBC').service('dataService', function () {
 
-	var dataset = new Array()
-	var titles = new Array()
+	this.dataset = new Array()
+	this.titles = new Array()
 
-	var maxCache = {}
-	var minCache = {}
+	this.maxCache = {}
+	this.minCache = {}
+
+	this.modifiedEvents = new Array();
+
+	this.onModify = function (callback) {
+		this.modifiedEvents.push(callback);
+	};
+
+	this.triggerModified = function () {
+		for(var i=0; i<this.modifiedEvents.length; i++){
+			if (typeof this.modifiedEvents[i] == "function") {
+				this.modifiedEvents[i]();
+			}			
+		}
+	};
 
 	/**
    * Store the dataset
    * @param {Array} dataset - The dataset array
    */
-	function setDataset (_titles, _dataset) {
+	this.setDataset = function (_titles, _dataset) {
 		if (!(_titles instanceof Array))
 			return console.error("The \"titles\" wasn't an Array instance!");
 
 		if (_dataset instanceof Array)
-			dataset = _dataset;
+			for(var i = 0; i<_dataset.length; i++) {
+				this.dataset.push(_dataset[i]);
+			}
 		else
 			return console.error("The \"dataset\" wasn't an Array instance!");
 
 		for (var i=0; i<_titles.length; i++) {
 			var title = { name: _titles[i], isNumeric: true, value: 1 };
 
-			for (var j=0; j<dataset.length; j++) {
-				if (dataset[j][title.name] && !isNumeric(dataset[j][title.name])) {
+			for (var j=0; j<this.dataset.length; j++) {
+				if (this.dataset[j][title.name] && !this.isNumeric(this.dataset[j][title.name])) {
 					title.isNumeric = false;
 					break;
+				} else {
+					title.active = true;
 				}
 			}
 
-			titles.push(title);
-		}		
-	}
+			this.titles.push(title);
+		}
+		this.triggerModified();		
+	};
 
 	/**
    * Store the dataset
    * @param {Array} dataset - The dataset array
    */
-	function getDataset () {
-		return dataset;
-	}
+	this.getDataset = function () {
+		return this.dataset;
+	};
 
 	/**
    * Return the titles array
    */
-	function getTitles () {
-		return titles;
-	}
+	this.getTitles = function () {
+		return this.titles;
+	};
 
 	/**
    * Return the title
    */
-	function getTitle (titleName) {
-		for(var i = 0; i < titles.length; i++){
-			if (titles[i].name == titleName){
-				return titles[i];
+	this.getTitle = function (titleName) {
+		for(var i = 0; i < this.titles.length; i++){
+			if (this.titles[i].name == titleName){
+				return this.titles[i];
 			}
 		}
-
 		return undefined;
-	}
+	};
 
 	/**
    * Retrieve the Max value of the respective key from the dataset
    * @param {string} key - The key of the dataset to be retrieved
    */
-	function getMaxOf(key) {
-		if (maxCache[key] != undefined)
-			return maxCache[keyName];
+	this.getMaxOf = function(key) {
+		if (this.maxCache[key] != undefined)
+			return this.maxCache[key];
 		
 		var max = 0;
-		for (var row of dataset)
-			if (getAsNumber(row[key]) > max)
+		for (var row of this.dataset)
+			if (this.isNumeric(row[key]) && row[key] > max)
 				max = row[key];
 
-		cache[key] = max;
+		this.maxCache[key] = max;
 		return max;
-	}
+	};
 
 	/**
    * Retrieve the Min value of the respective key from the dataset
    * @param {string} key - The key of the dataset to be retrieved
    */
-	function getMinOf(key) {
-		if (minCache[key] != undefined)
-			return minCache[keyName];
+	this.getMinOf = function(key) {
+		if (this.minCache[key] != undefined)
+			return this.minCache[key];
 		
-		var max = 0;
-		for (var row of dataset)
-			if (getAsNumber(row[key]) > max)
-				max = row[key];
+		var min = Infinity;
+		for (var row of this.dataset)
+			if (this.isNumeric(row[key]) && row[key] < min)
+				min = row[key];
 
-		minCache[key] = max;
-		return max;
-	}
+		this.minCache[key] = min;
+		return min;
+	};
 
 	/**
    * Set the key weight value
    * @param {string} key - The key of the dataset to be retrieved
    * @param {Number} value - The value between 0 and 1
    */
-	function setKeyWeight(key, value) {
-		var title = getTitle(key);
+	this.setKeyWeight = function(key, value) {
+		var title = this.getTitle(key);
 		if (title)
 			title.weight = value;
 		else
 			throw new Error("Title " + key + " not found in the titles array!!");
-	}
+	};
 
 	/**
    * Get the key weight value
    * @param {string} key - The key of the dataset to be retrieved
    */
-	function getKeyWeight(key) {
-		var title = getTitle(key);
+	this.getKeyWeight = function(key) {
+		var title = this.getTitle(key);
 		if (title)
 			return title.weight || 1;
 		else
 			throw new Error("Title " + key + " not found in the titles array!!");
-	}
+	};
 
 	/**
    * Set if the key must be used when getting most relevant
    * @param {string} key - The key of the dataset to be retrieved
    * @param {boolean} value - True or false
    */
-	function setKeyActive(key, value) {
-		var title = getTitle(key);
+	this.setKeyActive = function(key, value) {
+		var title = this.getTitle(key);
 		if (title)
 			title.active = !!value;
 		else
 			throw new Error("Title " + key + " not found in the titles array!!");
-	}
+	};
 
 	/**
    * Check if the key must be used when getting most relevant
    * @param {string} key - The key of the dataset to be retrieved
    */
-	function getKeyActive(key) {
-		var title = getTitle(key);
+	this.getKeyActive = function(key) {
+		var title = this.getTitle(key);
 		if (title)
 			return title.active;
 		else
 			throw new Error("Title " + key + " not found in the titles array!!");
-	}
-
-
-	/**
-   * Get a dataset copy sorted by the most similar rows based on the weights or not
-   * @param {object} row - The row to be compared
-   * @param {bool} useWeight - If the weight of the keys must be used
-   */
-	function datasetSortedBySimilarityTo(row, useWeight) {
-		return dataset.sort(function (a, b) {
-			return similarityOf(row, a, useWeight) > similarityOf(row, b, useWeight);
-		});
-	}
+	};
 
 	/**
    * Get similary value of two rows
@@ -163,13 +169,13 @@ angular.module('RBC').service('dataService', function () {
    * @param {object} row - The row to be compared
    * @param {boolena} useWeight - If the weight of the keys must be used
    */
-	function similarityOf(base_row, row, useWeight) {
+	this.similarityOf = function(base_row, row, useWeight) {
 		var similarity = 0;
 		for (var key in base_row) {
-			if (isNumeric(base_row[key]) && isNumeric(base_row[key])) {
-				var val = Math.abs(base_row[key]-row[key]) / (getMaxOf(key) - getMinOf(key))
+			if (this.isNumeric(base_row[key]) && this.isNumeric(row[key])) {
+				var val = Math.abs(base_row[key]-row[key]) / (this.getMaxOf(key) - this.getMinOf(key))
 				if (useWeight) {
-					similarity += 1 - val * getKeyWeight(key);
+					similarity += 1 - val * this.getKeyWeight(key);
 				}
 				else {
 					similarity += 1 - val;
@@ -177,7 +183,19 @@ angular.module('RBC').service('dataService', function () {
 			}
 		}
 		return similarity;
-	}
+	};
+
+	/**
+   * Sort the dataset by the most similar rows based on the weights or not
+   * @param {object} row - The row to be compared
+   * @param {bool} useWeight - If the weight of the keys must be used
+   */
+	this.datasetSortedBySimilarityTo = function(row, useWeight) {
+		var self = this;
+		return this.dataset.sort(function (a, b) {
+			return self.similarityOf(row, a, useWeight) < self.similarityOf(row, b, useWeight);
+		});
+	};
 
 
 	/////
@@ -186,29 +204,17 @@ angular.module('RBC').service('dataService', function () {
    * True if the parameter is numeric
    * @param {string} n - The supposed number
    */
-	function isNumeric(n) {
+	this.isNumeric = function(n) {
   	return !isNaN(parseFloat(n)) && isFinite(n);
-	}
+	};
 
 	/**
    * Get a Random Integer from an interval
    * @param {Number} min - The minimum value
    * @param {Number} min - The minimum value
    */
-	function randomFromInterval(min,max) {
+	this.randomFromInterval = function(min,max) {
   	return Math.floor(Math.random()*(max-min+1)+min);
-	}
+	};
 
-	return {
-		getDataset: getDataset,
-		setDataset: setDataset,
-		getMaxOf: getMaxOf,
-		getMinOf: getMinOf,
-		getKeyWeight: getKeyWeight,
-		setKeyWeight: setKeyWeight,
-		getKeyActive: getKeyActive,
-		setKeyActive: setKeyActive,
-		getTitles: getTitles,
-		getTitle: getTitle
-	}
 });

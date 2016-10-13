@@ -22,11 +22,12 @@ angular
 
 	  $scope.onChangeWeight = function (key, value) {
 	  	dataService.setKeyWeight(key, value);
+			dataService.triggerModified();
 	  }
 
 	  $scope.onChangeActive = function (key, value) {
-	  	console.log(key, value);
 	  	dataService.setKeyActive(key, value);
+			dataService.triggerModified();
 	  }
 
 	})

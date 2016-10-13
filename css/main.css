@@ -18,3 +18,14 @@ html, body {
 section#footer, .push {
     height: 55px; /* '.push' must be the same height as 'footer' */
 }
+
+body { font-size: 10px;}
+
+.table-fixed {
+	table-layout: fixed;
+	word-wrap: break-word;
+}
+
+.table-fixed td {
+	width: 20px;
+}
