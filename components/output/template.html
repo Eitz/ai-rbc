@@ -5,13 +5,13 @@
 					<h4><i class="fa fa-table"></i> Busca</h4>
       		<table class="table table-fixed">
         		<tr>
-								<td><strong>titles</strong></td>
+								<td><strong>Títulos</strong></td>
           			<td ng-repeat="title in data.titles | filter: { isNumeric: true }">
             			<strong>{{ title.name }}</strong>
           			</td>
 						</tr>						
 		        <tr>
-							<td><strong>values</strong></td>
+							<td><strong>Valores</strong></td>
 							<td ng-repeat="title in data.titles | filter: { isNumeric: true }">
 		        		<input style="width:80%" type="text" ng-model="data.search[title.name]" ng-change="data.sortBySimilary" ng-disabled="!title.active" />
 							</td>
