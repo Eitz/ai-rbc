@@ -1,10 +1,10 @@
 angular.module('RBC').service('dataService', function () {
 
-	this.dataset = new Array()
-	this.titles = new Array()
+	this.dataset = new Array();
+	this.titles = new Array();
 
-	this.maxCache = {}
-	this.minCache = {}
+	this.maxCache = {};
+	this.minCache = {};
 
 	this.modifiedEvents = new Array();
 
@@ -28,16 +28,17 @@ angular.module('RBC').service('dataService', function () {
 		if (!(_titles instanceof Array))
 			return console.error("The \"titles\" wasn't an Array instance!");
 
-		if (_dataset instanceof Array)
+		if (_dataset instanceof Array){
 			for(var i = 0; i<_dataset.length; i++) {
 				this.dataset.push(_dataset[i]);
 			}
-		else
+		}
+		else {
 			return console.error("The \"dataset\" wasn't an Array instance!");
+		}
 
 		for (var i=0; i<_titles.length; i++) {
 			var title = { name: _titles[i], isNumeric: true, value: 1 };
-
 			for (var j=0; j<this.dataset.length; j++) {
 				if (this.dataset[j][title.name] && !this.isNumeric(this.dataset[j][title.name])) {
 					title.isNumeric = false;
@@ -46,7 +47,6 @@ angular.module('RBC').service('dataService', function () {
 					title.active = true;
 				}
 			}
-
 			this.titles.push(title);
 		}
 		this.triggerModified();		
@@ -88,9 +88,11 @@ angular.module('RBC').service('dataService', function () {
 			return this.maxCache[key];
 		
 		var max = 0;
-		for (var row of this.dataset)
-			if (this.isNumeric(row[key]) && row[key] > max)
+		for (var row of this.dataset){
+			if (this.isNumeric(row[key]) && row[key] > max){
 				max = row[key];
+			}
+		}
 
 		this.maxCache[key] = max;
 		return max;
@@ -105,10 +107,11 @@ angular.module('RBC').service('dataService', function () {
 			return this.minCache[key];
 		
 		var min = Infinity;
-		for (var row of this.dataset)
-			if (this.isNumeric(row[key]) && row[key] < min)
+		for (var row of this.dataset){
+			if (this.isNumeric(row[key]) && row[key] < min){
 				min = row[key];
-
+			}
+		}
 		this.minCache[key] = min;
 		return min;
 	};
@@ -120,10 +123,11 @@ angular.module('RBC').service('dataService', function () {
    */
 	this.setKeyWeight = function(key, value) {
 		var title = this.getTitle(key);
-		if (title)
+		if (title){
 			title.weight = value;
-		else
+		}	else {
 			throw new Error("Title " + key + " not found in the titles array!!");
+		}
 	};
 
 	/**
@@ -132,10 +136,11 @@ angular.module('RBC').service('dataService', function () {
    */
 	this.getKeyWeight = function(key) {
 		var title = this.getTitle(key);
-		if (title)
+		if (title) {
 			return title.weight || 1;
-		else
+		} else {
 			throw new Error("Title " + key + " not found in the titles array!!");
+		}
 	};
 
 	/**
@@ -157,10 +162,11 @@ angular.module('RBC').service('dataService', function () {
    */
 	this.getKeyActive = function(key) {
 		var title = this.getTitle(key);
-		if (title)
+		if (title){
 			return title.active;
-		else
+		} else{
 			throw new Error("Title " + key + " not found in the titles array!!");
+		}
 	};
 
 	/**
@@ -172,17 +178,18 @@ angular.module('RBC').service('dataService', function () {
 	this.similarityOf = function(base_row, row, useWeight) {
 		var similarity = 0;
 		for (var key in base_row) {
-			if (this.isNumeric(base_row[key]) && this.isNumeric(row[key])) {
-				var val = Math.abs(base_row[key]-row[key]) / (this.getMaxOf(key) - this.getMinOf(key))
+			if (this.getKeyActive(key) && this.isNumeric(base_row[key]) && this.isNumeric(row[key])) {
+				var divisor = (this.getMaxOf(key) - this.getMinOf(key)) ? (this.getMaxOf(key) - this.getMinOf(key)) : 1 ;
+				var val = Math.abs(base_row[key]-row[key]) / divisor;
 				if (useWeight) {
-					similarity += 1 - val * this.getKeyWeight(key);
+					similarity += (1-val) * this.getKeyWeight(key);
 				}
 				else {
-					similarity += 1 - val;
+					similarity += (1-val);
 				}
 			}
 		}
-		return similarity;
+		return similarity == 0 ? -Infinity : similarity;
 	};
 
 	/**
@@ -216,5 +223,4 @@ angular.module('RBC').service('dataService', function () {
 	this.randomFromInterval = function(min,max) {
   	return Math.floor(Math.random()*(max-min+1)+min);
 	};
-
 });

@@ -30,8 +30,8 @@
           <td>{{title.name}}</td>
           <td>
             <span ng-if="title.isNumeric">
-              <input style="display: inline; width: 55%" type="range" min="0" max="1" step="0.1" ng-class="{ disabled : !title.isNumeric }" ng-disabled="!title.isNumeric" ng-change="onChangeWeight(title.name, title.value)" ng-model="title.value">
-              <input style="display: inline; width: 40%" type="number" disabled class="disabled" ng-disabled="1" value="{{title.value}}">
+              <input style="display: inline; width: 55%" type="range" min="0" max="1" step="0.1" ng-class="{ disabled : !title.isNumeric }" ng-disabled="!title.active" ng-change="onChangeWeight(title.name, title.value)" ng-model="title.value">
+              <input style="display: inline; width: 40%" type="number" disabled class="disabled" ng-disabled="!title.active" value="{{title.value}}">
             </span>
             <span ng-if="!title.isNumeric">Não Numérico</span>
           </td>
